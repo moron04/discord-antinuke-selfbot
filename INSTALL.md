@@ -17,7 +17,7 @@ This guide will help you quickly install and set up the Discord Antinuke Selfbot
 Clone this repository or download it as a ZIP file and extract it.
 
 ```bash
-git clone https://github.com/yourusername/discord-antinuke-selfbot.git
+git clone https://github.com/faiz4sure/discord-antinuke-selfbot.git
 cd discord-antinuke-selfbot
 ```
 
