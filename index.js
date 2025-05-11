@@ -56,6 +56,12 @@ const recentActions = {
     memberRoleUpdates: {}
 };
 
+// ==================== SERVER TRACKING ====================
+// Track servers the bot was removed from 
+const removedServers = {
+    // Format: { serverId: { name: "server name", timestamp: Date.now(), reason: "kicked/left" } }
+};
+
 // Create data directory if it doesn't exist
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
@@ -66,6 +72,18 @@ if (!fs.existsSync(dataDir)) {
 const logsDir = path.join(dataDir, 'logs');
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Load removed servers from disk if the file exists
+const removedServersPath = path.join(dataDir, 'removed_servers.json');
+try {
+    if (fs.existsSync(removedServersPath)) {
+        const data = JSON.parse(fs.readFileSync(removedServersPath, 'utf8'));
+        Object.assign(removedServers, data);
+        console.log(chalk.yellow(`Loaded ${Object.keys(data).length} previously removed servers from disk`));
+    }
+} catch (error) {
+    console.log(chalk.red(`Failed to load removed servers data: ${error.message}`));
 }
 
 // ==================== HELPER FUNCTIONS ====================
@@ -261,37 +279,47 @@ async function sendLogToChannel(guildId, message, level = 'info') {
             `Time: ${timestamp}`
         ].join('\n');
         
+        // Keep track of successful DMs to avoid excessive error logging
+        let anyDmSuccessful = false;
+        let dmErrorsCount = 0;
+        
         for (const ownerId of config.ownerIds) {
             try {
-                const owner = await client.users.fetch(ownerId);
+                // Use a .catch() handler directly on fetch to avoid throwing errors
+                const owner = await client.users.fetch(ownerId)
+                    .catch(() => {
+                        // Silently handle fetch errors
+                        return null;
+                    });
+                
+                // Skip if user can't be fetched
+                if (!owner) continue;
+                
                 // Send a plain text DM (selfbots don't support embeds in DMs)
                 await owner.send(plainTextMessage);
-                log(`Successfully sent alert to owner ${ownerId}`, 'info');
-            } catch (error) {
-                // Log DM failures with better detail
-                if (error.code === 50007) {
-                    log(`Cannot send DM to owner ${ownerId} - they have DMs closed or blocked the bot`, 'warning');
-                } else {
-                    log(`Failed to DM owner ${ownerId}: ${error.message}`, 'warning');
-                }
+                anyDmSuccessful = true;
                 
-                // Try to find a server where we share with this owner to notify them
-                try {
-                    for (const [guildId, guild] of client.guilds.cache) {
-                        const member = await guild.members.fetch(ownerId).catch(() => null);
-                        if (member) {
-                            log(`Owner ${ownerId} is present in ${guild.name} but couldn't receive DM`, 'info');
-                            break;
-                        }
+                // Only log successful DMs in debug mode to reduce console spam
+                if (config.logLevel === 'debug') {
+                    log(`Successfully sent alert to owner ${owner.tag}`, 'info');
+                }
+            } catch (error) {
+                // Count DM errors but don't log each one to avoid spam
+                dmErrorsCount++;
+                
+                // Only log the first error if it's a critical alert (error or warning)
+                if (dmErrorsCount === 1 && ['error', 'warning'].includes(level)) {
+                    // Use console.log directly instead of log() to avoid file logging
+                    if (config.logLevel === 'debug') {
+                        console.log(chalk.yellow(`Note: Cannot send DM to one or more owners - they likely have DMs closed`));
                     }
-                } catch (e) {
-                    // Ignore errors in this recovery attempt
                 }
             }
         }
     }
     
     // 3. Send to a specific channel if configured
+    // With improved error handling to prevent errors when channel is not found
     const channelId = config.logChannels[guildId];
     if (channelId) {
         // Format a plain text version of the message for channels
@@ -303,27 +331,36 @@ async function sendLogToChannel(guildId, message, level = 'info') {
         ].join('\n');
         
         try {
-            const channel = await client.channels.fetch(channelId).catch(e => {
-                log(`Failed to fetch log channel ${channelId}: ${e.message}`, 'warning');
-                return null;
-            });
+            // Wrapped in a silent try/catch to prevent any errors from propagating
+            const channel = await client.channels.fetch(channelId)
+                .catch(() => {
+                    // Instead of logging an error, just return null and handle silently
+                    return null;
+                });
             
             if (channel && channel.isText()) {
-                // Send plain text message (selfbots don't support embeds in channels)
-                await channel.send(plainTextMessage);
-                log(`Successfully logged alert to channel #${channel.name}`, 'info');
-            } else if (channel) {
-                log(`Log channel ${channelId} exists but isn't a text channel`, 'warning');
+                try {
+                    // Use another try/catch around send to handle permission issues silently
+                    await channel.send(plainTextMessage);
+                    log(`Successfully logged alert to channel #${channel.name}`, 'info');
+                } catch (sendError) {
+                    // If we can't send to the channel, don't throw an error, just log silently
+                    // and fall back to console-only logging
+                    
+                    // Only log detailed error information in debug mode to reduce console spam
+                    if (config.logLevel === 'debug') {
+                        if (sendError.code === 50013) {
+                            console.log(chalk.yellow(`Cannot send to log channel: Missing permissions`));
+                        } else {
+                            console.log(chalk.yellow(`Cannot send to log channel: ${sendError.message}`));
+                        }
+                    }
+                }
             }
         } catch (error) {
-            // Provide better error information for channel logging failures
-            if (error.code === 50013) {
-                log(`Missing permissions to send messages in log channel ${channelId}`, 'warning');
-            } else if (error.code === 10003 || error.code === 10004) {
-                log(`Log channel ${channelId} no longer exists or is inaccessible`, 'warning');
-            } else {
-                log(`Failed to log to channel ${channelId}: ${error.message}`, 'warning');
-            }
+            // Final catch-all to ensure any unexpected errors don't crash the bot
+            // Instead of logging errors about channels, we'll just silently continue
+            // This improves stability when log channels aren't available
         }
     }
 }
@@ -639,7 +676,7 @@ function cacheGuild(guild) {
     }
 }
 
-async function recoverChannel(channelId, guildId) {
+async function recoverChannel(channelId, guildId, deletedChannel) {
     try {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) {
@@ -647,18 +684,116 @@ async function recoverChannel(channelId, guildId) {
             return;
         }
         
-        // If recovery functionality is implemented in the future, it would go here
-        // For now, just log that recovery was attempted
+        // Check if recovery is enabled in config
+        if (!config.antinuke_settings || !config.antinuke_settings.auto_recovery || !config.antinuke_settings.recover_channels) {
+            log(`Channel recovery skipped: Recovery disabled in config`, 'info', guildId);
+            return;
+        }
         
-        // Log to actions.log in data folder
-        logAction(`[${guild.name}] Attempted to recover deleted channel (ID: ${channelId})`);
-        log(`Attempted channel recovery for ID ${channelId}`, 'info', guildId);
+        // First, try to get channel data from our cache (for future implementation)
+        // For now, we just use the basic info we have from the deletedChannel object
+        if (!deletedChannel) {
+            log(`Limited channel recovery: No channel data available for ${channelId}`, 'warning', guildId);
+            
+            // Attempt basic recovery with minimal info
+            const newChannel = await guild.channels.create(`recovered-${channelId}`, {
+                type: 'GUILD_TEXT',
+                topic: `Recovered channel (ID: ${channelId})`
+            }).catch(e => {
+                log(`Error creating recovered channel: ${e.message}`, 'error', guildId);
+                return null;
+            });
+            
+            if (newChannel) {
+                logAction(`[${guild.name}] Successfully recovered deleted channel with basic settings (ID: ${channelId})`);
+                log(`Created basic recovery channel ${newChannel.name} for deleted ${channelId}`, 'success', guildId);
+                
+                // Send a message in the new channel
+                await newChannel.send({
+                    content: `This channel was recovered after it was deleted by a non-whitelisted user. Original ID: ${channelId}`
+                }).catch(() => {});
+                
+                return newChannel;
+            }
+        } else {
+            // We have the deleted channel data, so we can create a more accurate replica
+            log(`Detailed channel recovery for ${deletedChannel.name} (${channelId})`, 'info', guildId);
+            
+            // Use rate limit handler for channel creation to prevent Discord API limits
+            // With improved error handling to prevent crashes
+            try {
+                await rateLimitHandler.execute('channelCreation', async () => {
+                    // Add a small delay to prevent immediate throttling
+                    await new Promise(resolve => setTimeout(resolve, config.antinuke_settings?.recovery_delay || 500));
+                    return true;
+                }, [], { 
+                    // Only log rate limit messages in debug mode to avoid console spam
+                    logFunction: (msg) => {
+                        if (config.logLevel === 'debug') {
+                            log(msg, 'info', guildId);
+                        }
+                    }
+                });
+            } catch (error) {
+                // Silently handle rate limit errors without stopping execution
+                // Just a small delay if something goes wrong
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Create a new channel with the same properties
+            const channelOptions = {
+                type: deletedChannel.type,
+                topic: deletedChannel.topic,
+                nsfw: deletedChannel.nsfw,
+                bitrate: deletedChannel.bitrate,
+                userLimit: deletedChannel.userLimit,
+                parent: deletedChannel.parent,
+                // Copy permission overwrites accurately
+                permissionOverwrites: Array.isArray(deletedChannel.permissionOverwrites) 
+                    ? deletedChannel.permissionOverwrites 
+                    : (deletedChannel.permissionOverwrites?.cache?.map(overwrite => ({
+                        id: overwrite.id,
+                        type: overwrite.type,
+                        allow: overwrite.allow,
+                        deny: overwrite.deny
+                    })) || [])
+            };
+            
+            // Clean up undefined values
+            Object.keys(channelOptions).forEach(key => {
+                if (channelOptions[key] === undefined) delete channelOptions[key];
+            });
+            
+            // Create the channel
+            const newChannel = await guild.channels.create(deletedChannel.name, channelOptions)
+                .catch(e => {
+                    log(`Error recreating channel ${deletedChannel.name}: ${e.message}`, 'error', guildId);
+                    return null;
+                });
+            
+            if (newChannel) {
+                logAction(`[${guild.name}] Successfully recovered deleted channel ${deletedChannel.name} (ID: ${channelId})`);
+                log(`Recovered channel ${newChannel.name} with detailed settings`, 'success', guildId);
+                
+                // Send a message in the new channel if it's a text channel
+                if (newChannel.type === 'GUILD_TEXT' || newChannel.type === 'GUILD_NEWS') {
+                    await newChannel.send({
+                        content: `This channel was recovered after it was deleted by a non-whitelisted user.\nOriginal ID: ${channelId}`
+                    }).catch(() => {});
+                }
+                
+                return newChannel;
+            }
+        }
+        
+        return null;
     } catch (error) {
-        log(`Error attempting channel recovery: ${error.message}`, 'error', guildId);
+        log(`Error during channel recovery: ${error.message}`, 'error', guildId);
+        return null;
     }
 }
 
-async function recoverRole(roleId, guildId) {
+async function recoverRole(roleId, guildId, deletedRole) {
     try {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) {
@@ -666,14 +801,91 @@ async function recoverRole(roleId, guildId) {
             return;
         }
         
-        // If recovery functionality is implemented in the future, it would go here
-        // For now, just log that recovery was attempted
+        // Check if recovery is enabled in config
+        if (!config.antinuke_settings || !config.antinuke_settings.auto_recovery || !config.antinuke_settings.recover_roles) {
+            log(`Role recovery skipped: Recovery disabled in config`, 'info', guildId);
+            return;
+        }
         
-        // Log to actions.log in data folder
-        logAction(`[${guild.name}] Attempted to recover deleted role (ID: ${roleId})`);
-        log(`Attempted role recovery for ID ${roleId}`, 'info', guildId);
+        // First, try to get role data from our cache (for future implementation)
+        // For now, we just use the basic info we have from the deletedRole object
+        if (!deletedRole) {
+            log(`Limited role recovery: No role data available for ${roleId}`, 'warning', guildId);
+            
+            // Attempt basic recovery with minimal info
+            const newRole = await guild.roles.create({
+                name: `recovered-${roleId}`,
+                color: 'GREY',
+                reason: `Auto-recovery of deleted role ${roleId}`
+            }).catch(e => {
+                log(`Error creating recovered role: ${e.message}`, 'error', guildId);
+                return null;
+            });
+            
+            if (newRole) {
+                logAction(`[${guild.name}] Successfully recovered deleted role with basic settings (ID: ${roleId})`);
+                log(`Created basic recovery role ${newRole.name} for deleted ${roleId}`, 'success', guildId);
+                return newRole;
+            }
+        } else {
+            // We have the deleted role data, so we can create a more accurate replica
+            log(`Detailed role recovery for ${deletedRole.name} (${roleId})`, 'info', guildId);
+            
+            // Use rate limit handler for role creation to prevent Discord API limits
+            // With improved error handling to prevent crashes
+            try {
+                await rateLimitHandler.execute('roleCreation', async () => {
+                    // Add a small delay to prevent immediate throttling
+                    await new Promise(resolve => setTimeout(resolve, config.antinuke_settings?.recovery_delay || 500));
+                    return true;
+                }, [], { 
+                    // Only log rate limit messages in debug mode to avoid console spam
+                    logFunction: (msg) => {
+                        if (config.logLevel === 'debug') {
+                            log(msg, 'info', guildId);
+                        }
+                    }
+                });
+            } catch (error) {
+                // Silently handle rate limit errors without stopping execution
+                // Just a small delay if something goes wrong
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Create a new role with the same properties
+            const roleOptions = {
+                name: deletedRole.name,
+                color: deletedRole.hexColor || 'GREY',
+                hoist: deletedRole.hoist,
+                mentionable: deletedRole.mentionable,
+                permissions: deletedRole.permissions,
+                position: deletedRole.position,
+                reason: `Auto-recovery of deleted role ${roleId}`
+            };
+            
+            // Clean up undefined values
+            Object.keys(roleOptions).forEach(key => {
+                if (roleOptions[key] === undefined) delete roleOptions[key];
+            });
+            
+            // Create the role
+            const newRole = await guild.roles.create(roleOptions)
+                .catch(e => {
+                    log(`Error recreating role ${deletedRole.name}: ${e.message}`, 'error', guildId);
+                    return null;
+                });
+            
+            if (newRole) {
+                logAction(`[${guild.name}] Successfully recovered deleted role ${deletedRole.name} (ID: ${roleId})`);
+                log(`Recovered role ${newRole.name} with detailed settings`, 'success', guildId);
+                return newRole;
+            }
+        }
+        
+        return null;
     } catch (error) {
-        log(`Error attempting role recovery: ${error.message}`, 'error', guildId);
+        log(`Error during role recovery: ${error.message}`, 'error', guildId);
+        return null;
     }
 }
 
@@ -723,7 +935,9 @@ for (const file of eventFiles) {
             recoverRole,
             cacheGuild,
             recentActions,
-            whitelistManager
+            whitelistManager,
+            removedServers,
+            saveRemovedServers
         });
     });
 }
@@ -801,6 +1015,32 @@ client.login(config.token).then(() => {
     process.exit(1);
 });
 
+// ==================== REMOVED SERVER TRACKING ====================
+
+/**
+ * Saves the removed servers tracking data to disk
+ * @param {Object} helpers - Helper functions and utilities
+ */
+function saveRemovedServers(helpers) {
+    const { log } = helpers;
+    
+    try {
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        fs.writeFileSync(
+            removedServersPath,
+            JSON.stringify(removedServers, null, 2),
+            'utf8'
+        );
+        
+        log(`Saved removed servers tracking data (${Object.keys(removedServers).length} servers)`, 'debug');
+    } catch (error) {
+        log(`Failed to save removed servers data: ${error.message}`, 'error');
+    }
+}
+
 // ==================== GRACEFUL SHUTDOWN HANDLER ====================
 
 /**
@@ -814,6 +1054,10 @@ async function handleGracefulShutdown(signal) {
         
         // Log the shutdown in actions.log
         logAction(`Shutting down due to ${signal} signal`);
+        
+        // Save removed servers data before shutdown
+        saveRemovedServers({ log });
+        log(`Saved removed servers tracking data (${Object.keys(removedServers).length} servers)`, 'info');
         
         // Set a status message
         if (client && client.user) {

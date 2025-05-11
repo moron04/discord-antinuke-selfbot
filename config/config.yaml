@@ -25,6 +25,11 @@ antinuke_settings:
   # WHAT TO DO WHEN SELFBOT DETECTS AN ATTACKER
   punishment: "ban"  # Options: "ban", "kick", or "none"
   
+  auto_recovery: true # Automatically recover the channels and roles that were harmed
+  recover_channels: true  # Recover deleted channels
+  recover_roles: true     # Recover deleted roles
+  recovery_delay: 1500     # Milliseconds to wait between recoveries
+  
   # HOW MANY ACTIONS TRIGGER THE PROTECTION
   # If someone does more than this number of actions in the time window, they're caught
   ban_limit: 5                # Triggers if someone bans 5+ people quickly

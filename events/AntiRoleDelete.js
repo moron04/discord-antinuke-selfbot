@@ -51,16 +51,19 @@ module.exports = {
             
             log(`User ${executor.tag} has deleted ${recentActionsCount}/${threshold} roles in the time window`, 'info', role.guild.id);
             
-            if (thresholdExceeded) {
+            // Always try to recover the role immediately if auto-recovery is enabled
+            // This happens regardless of threshold
+            if (config.antinuke_settings?.auto_recovery && config.antinuke_settings?.recover_roles) {
+                log(`Immediate role recovery triggered for ${role.name} (deleted by ${executor.tag})`, 'info', role.guild.id);
+                await recoverRole(role.id, role.guild.id, role);
+            }
+            
+            // If more than 5 roles were deleted (>= threshold), take action against the user
+            if (recentActionsCount >= threshold) {
                 log(`Role deletion threshold exceeded by ${executor.tag} (${executor.id}) - ${recentActionsCount}/${threshold}`, 'warning', role.guild.id);
                 
                 // Take action against the user
                 await takeAction(executor.id, role.guild.id, 'Mass role deletion');
-                
-                // Attempt to recover the role if recovery is enabled
-                if (config.recovery.roles) {
-                    await recoverRole(role.id, role.guild.id);
-                }
             }
         }).catch((error) => {
             log(`Error processing role deletion: ${error.message}`, 'error', role.guild.id);

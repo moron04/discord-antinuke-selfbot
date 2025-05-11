@@ -50,17 +50,20 @@ module.exports = {
             ).length || 0;
             
             log(`User ${executor.tag} has deleted ${recentActionsCount}/${threshold} channels in the time window`, 'info', channel.guild.id);
+
+            // Always try to recover the channel immediately if auto-recovery is enabled
+            // This happens regardless of threshold
+            if (config.antinuke_settings?.auto_recovery && config.antinuke_settings?.recover_channels) {
+                log(`Immediate channel recovery triggered for ${channel.name} (deleted by ${executor.tag})`, 'info', channel.guild.id);
+                await recoverChannel(channel.id, channel.guild.id, channel);
+            }
             
-            if (thresholdExceeded) {
+            // If more than 5 channels were deleted (>= threshold), take action against the user
+            if (recentActionsCount >= threshold) {
                 log(`Channel deletion threshold exceeded by ${executor.tag} (${executor.id}) - ${recentActionsCount}/${threshold}`, 'warning', channel.guild.id);
                 
                 // Take action against the user
                 await takeAction(executor.id, channel.guild.id, 'Mass channel deletion');
-                
-                // Attempt to recover the channel if recovery is enabled
-                if (config.recovery.channels) {
-                    await recoverChannel(channel.id, channel.guild.id);
-                }
             }
         }).catch((error) => {
             log(`Error processing channel deletion: ${error.message}`, 'error', channel.guild.id);

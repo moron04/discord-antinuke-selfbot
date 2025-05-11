@@ -172,8 +172,9 @@ class ConfigLoader {
       }
     }
     
-    // Thresholds
+    // Thresholds and antinuke settings
     if (this.yamlConfig.antinuke_settings) {
+      // Load thresholds from config
       this.config.thresholds.bans = this.yamlConfig.antinuke_settings.ban_limit || this.config.thresholds.bans;
       this.config.thresholds.kicks = this.yamlConfig.antinuke_settings.kick_limit || this.config.thresholds.kicks;
       this.config.thresholds.channelCreations = this.yamlConfig.antinuke_settings.channel_create_limit || this.config.thresholds.channelCreations;
@@ -202,6 +203,17 @@ class ConfigLoader {
       
       // Punishment type
       this.config.punishment = this.yamlConfig.antinuke_settings.punishment || this.config.punishment;
+      
+      // Auto-recovery settings
+      this.config.antinuke_settings = {
+        auto_recovery: this.yamlConfig.antinuke_settings.auto_recovery !== false, // Default to true if not specified
+        recover_channels: this.yamlConfig.antinuke_settings.recover_channels !== false, // Default to true if not specified
+        recover_roles: this.yamlConfig.antinuke_settings.recover_roles !== false, // Default to true if not specified
+        recovery_delay: this.yamlConfig.antinuke_settings.recovery_delay || 500, // Default to 500ms if not specified
+        punishment: this.yamlConfig.antinuke_settings.punishment || 'ban' // Default to ban if not specified
+      };
+      
+      console.log(chalk.green(`✅ Loaded auto-recovery settings: ${this.config.antinuke_settings.auto_recovery ? 'Enabled' : 'Disabled'}`));
     }
     
     // Logging configuration
